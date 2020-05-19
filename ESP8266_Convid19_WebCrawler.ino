@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <WiFiClientSecureBearSSL.h>
@@ -7,18 +6,19 @@
 
 #define LED_BLINK       D4
 #define SERIAL_SPEED    115200
-#define WIFI_SSID       "jonathan"
-#define WIFI_PASSWORD   "A58060EAD1"
-#define GET_HTML_DATA_DELAYTIME  600 //secondint
-#define GET_HTML_DATA_ERROR_DELAYTIME  60 //secondint 
+#define WIFI_SSID       "TEST"
+#define WIFI_PASSWORD   "12345678"
+#define GET_HTML_DATA_DELAYTIME  600        // each 600 second catch web data
+#define GET_HTML_DATA_ERROR_DELAYTIME  60   // if error happened, re-try durning 60 second
 #define LCD_COLUMNS     16
 #define LCD_ROWS        2
+#define LCD_DISPLAY_DURNING_TIME  5 //second
 #define CACHE_DATA_NUM   3
 
 /*--- Wifi Setting Parameter ---*/
 WiFiClientSecure client;
 const String host = "https://news.campaign.yahoo.com.tw/2019-nCoV/index.php";
-const char fingerprint[] PROGMEM = "bf 9b e0 0f ab 21 50 18 5b 5b b9 8c af 13 c4 8f 93 e2 a1 b1"; // Use web browser to view and copy
+const char fingerprint[] PROGMEM = "bf 9b e0 0f ab 21 50 18 5b 5b b9 8c af 13 c4 8f 93 e2 a1 b1"; // Expiration date: 2020/10/17, use web browser to view and copy
 
 /*--- Hardware Setting Parameter ---*/
 LiquidCrystal_I2C lcd(0x27, LCD_COLUMNS, LCD_ROWS);
@@ -205,7 +205,7 @@ void displayToLcd(String *data) {
   line[1] = "News";
   lcd.setCursor(LCD_COLUMNS - line[1].length(), 1);
   lcd.print(line[1]);
-  delay(5000);
+  delay(LCD_DISPLAY_DURNING_TIME * 1000);
   
   lcd.clear();
   line[0] = "Total Cases :";
@@ -214,7 +214,7 @@ void displayToLcd(String *data) {
   line[1] = *(data);
   lcd.setCursor(LCD_COLUMNS - line[1].length(), 1);
   lcd.print(line[1]);
-  delay(5000);
+  delay(LCD_DISPLAY_DURNING_TIME * 1000);
   
   lcd.clear();
   line[0] = "Recent Cases :";
@@ -223,7 +223,7 @@ void displayToLcd(String *data) {
   line[1] = *(data + 1);
   lcd.setCursor(LCD_COLUMNS - line[1].length(), 1);
   lcd.print(line[1]);
-  delay(5000);
+  delay(LCD_DISPLAY_DURNING_TIME * 1000);
   
   lcd.clear();
   line[0] = "Update Time :";
@@ -233,7 +233,7 @@ void displayToLcd(String *data) {
   replaceDateFormat(&line[1]);
   lcd.setCursor(LCD_COLUMNS - line[1].length(), 1);
   lcd.print(line[1]);
-  delay(5000);
+  delay(LCD_DISPLAY_DURNING_TIME * 1000);
   
   lcd.clear();  
   line[0] = "Taiwan";
@@ -242,7 +242,7 @@ void displayToLcd(String *data) {
   line[1] = "Can Help!";
   lcd.setCursor(LCD_COLUMNS - line[1].length(), 1);
   lcd.print(line[1]);
-  delay(5000);
+  delay(LCD_DISPLAY_DURNING_TIME * 1000);
 }
 
 void replaceDateFormat(String *data) {
