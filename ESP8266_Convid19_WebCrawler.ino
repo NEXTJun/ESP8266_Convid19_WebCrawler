@@ -15,6 +15,12 @@
 #define LCD_DISPLAY_DURNING_TIME  5 //second
 #define CACHE_DATA_NUM   3
 
+struct CrawlerToken {
+  String catch_tag;
+  String catch_tag_end;
+  int index;
+};
+
 /*--- Wifi Setting Parameter ---*/
 WiFiClientSecure client;
 const String host = "https://news.campaign.yahoo.com.tw/2019-nCoV/index.php";
@@ -26,12 +32,9 @@ int led_status;
 
 /*--- Crawler Setting Parameter ---*/
 String data_buffer[CACHE_DATA_NUM];
-int count[CACHE_DATA_NUM] = {0};
-const int target_count[CACHE_DATA_NUM] = {1, 1, 1};
-const String keyword[CACHE_DATA_NUM] = {"<p class=\"current\">", "<span class=\"no\">", "<span class=\"time\">"};
-const String keyword_end[CACHE_DATA_NUM] = {"</p>", "</span>", "</span>"};
-bool keyword_catch_enable[CACHE_DATA_NUM] = {0};
-
+const CrawlerToken crawler_token[CACHE_DATA_NUM] = {{"<p class=\"current\">", "</p>", 1},
+                                              {"<span class=\"no\">", "</span>", 1},
+                                              {"<span class=\"time\">", "</span>", 1}};
 /*--- Others Parameter ---*/
 unsigned long time_tick = 0;
 bool time_init = true;
@@ -89,6 +92,7 @@ bool initSerialConfig() {
 bool initLedPinConfig() {
   Serial.printf("Setting LED configuration ... ");
   led_status = LOW;
+  pinMode(LED_BLINK, OUTPUT); 
   digitalWrite(LED_BLINK, led_status);
   Serial.printf("Ready \n");
   return true;
@@ -111,9 +115,19 @@ bool initWifiConfig() {
   WiFi.mode(WIFI_STA);
   Serial.printf("Wifi Connecting to %s \n", WIFI_SSID);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  int count = 0;
   while (WiFi.status() != WL_CONNECTED) {  // wait connected
     delay(100);
     Serial.printf(".");
+    count++;
+
+    if(count > 150) {
+      Serial.printf("\n");
+      Serial.printf("Wifi %s Unconnect! \n", WIFI_SSID);
+      String message = "Wifi Unconnect!";
+      displayErrorToLcd((String*)&message);
+      count = 0;
+    }
   }
   Serial.printf("\n");
   Serial.printf("Wifi connected! \n");
@@ -155,25 +169,26 @@ bool getWebHtmlData(String *data) {
 }
 
 void getCrawlerData(String *data) {
-  memset(count, 0, CACHE_DATA_NUM);
+  int count[CACHE_DATA_NUM] = {0};
+  bool catch_enable[CACHE_DATA_NUM] = {0};
   
   while (client.connected()) {
     String line = client.readStringUntil('\n');
     for(int i = 0; i < CACHE_DATA_NUM; i++) {
-      if(count[i] < target_count[i]) {
-        if(line.indexOf(keyword[i]) > 0) {          
-          if(line.indexOf(keyword_end[i]) > 0) {
-            *(data+i) = line.substring(line.indexOf(keyword[i]) + keyword[i].length(), line.indexOf(keyword_end[i]));
-            keyword_catch_enable[i] = false;
+      if(count[i] < crawler_token[i].index) {
+        if(line.indexOf(crawler_token[i].catch_tag) > 0) {          
+          if(line.indexOf(crawler_token[i].catch_tag_end) > 0) {
+            *(data+i) = line.substring(line.indexOf(crawler_token[i].catch_tag) + crawler_token[i].catch_tag.length(), line.indexOf(crawler_token[i].catch_tag_end));
+            catch_enable[i] = false;
             count[i]++;
           } else {
-            *(data+i) = line.substring(line.indexOf(keyword[i]) + keyword[i].length());
-            keyword_catch_enable[i] = true;
+            *(data+i) = line.substring(line.indexOf(crawler_token[i].catch_tag) + crawler_token[i].catch_tag.length());
+            catch_enable[i] = true;
           }
-        } else if(keyword_catch_enable[i] == true) {
-          if(line.indexOf(keyword_end[i]) > 0) {
-            *(data+i) = *(data+i) + line.substring(0, line.indexOf(keyword_end[i]));
-            keyword_catch_enable[i] = false;
+        } else if(catch_enable[i] == true) {
+          if(line.indexOf(crawler_token[i].catch_tag_end) > 0) {
+            *(data+i) = *(data+i) + line.substring(0, line.indexOf(crawler_token[i].catch_tag_end));
+            catch_enable[i] = false;
             count[i]++;
           } else {
             *(data+i) = *(data+i) + line;
@@ -181,18 +196,15 @@ void getCrawlerData(String *data) {
         }
       }
     }
-    if(checkAllCountMatchTarget())
+    
+    bool check_result = true;
+    for(int i = 0; i < CACHE_DATA_NUM; i++) {
+      if(count[i] != crawler_token[i].index)
+        check_result = false;
+    }
+    if(check_result == true)
       break;
   }
-}
-
-bool checkAllCountMatchTarget() {
-  bool result = true;
-  for(int i = 0; i < CACHE_DATA_NUM; i++) {
-    if(count[i] != target_count[i])
-      return false;
-  }
-  return result;
 }
 
 void displayToLcd(String *data) {

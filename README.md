@@ -1,14 +1,14 @@
 # ESP8266 Convid19 Web Crawler
 
-[![YouTube影片](http://img.youtube.com/vi/Kwwezf4AD-o/0.jpg)](http://www.youtube.com/watch?v=Kwwezf4AD-o)
+[![YouTube影片](https://github.com/NEXTJun/ESP8266_Convid19_WebCrawler/blob/master/src_md/picture/Video_AddPlayIcon.jpg?raw=true)](https://youtu.be/YavU43Bsjqs)
 
-影片連結: https://youtu.be/Kwwezf4AD-o
+影片連結: https://youtu.be/YavU43Bsjqs
 
 ---
 
 ## 1. 前言
 
-2020年新冠病毒(Convid-16)疫情影響, 各社群對疫情的討論與創作熱絡, 恰巧某天在maker社群看見相關創作計畫, 這專案就這麼跟風修改做出來了。
+2020年新冠病毒(Convid-16)疫情影響, 各社群對疫情的討論與創作熱絡, 恰巧某天在maker社群看見相關創作計畫 - [Taiwan can help ! + Taiwanduino](https://www.facebook.com/shijie.wei.7/posts/3080508575314757)  [[共筆筆記]](https://hackmd.io/-hK9HRlVSUSNKXRL9mUYyA?both&fbclid=IwAR1VDwCz9Ti68y5FFf8GJZLS9UgtpFDAbtoobG91PqfVfnf1hFv08fXGEn0), 這專案就這麼跟風修改做出來了。
 
 有鑑於前個專案在電路製作上需下功夫, 這次盡量以簡單的開發板、模組, 用杜邦線串接為主
 
@@ -21,7 +21,7 @@
 ## 2. 所需材料
 
 #### 必要
-+ WeMos D1開發板
++ WeMos D1 mini開發板
 + IIC/I2C 1602 LCD模組
 + micro USB傳輸線
 + 杜邦線、排針數個
@@ -39,12 +39,12 @@
 
 基本的製作過程可參考創作者連結中的說明, 這邊說明幾點紙模型的簡單技巧。 建議在摺紙的過程中, 在折痕的凹陷面, 用美工刀刀背畫痕, 以求破壞紙纖維讓折線更工整漂亮。 如果害怕紙模型受潮軟化, 可在選紙時採用具基本防水性能的紙材, 以及在完成的作品噴塗保護漆。
 
-因為需在模型內放置WeMos D1開發板, 在側面記得要開孔以求micro USB頭可插入做充電傳輸。
+因為需在模型內放置WeMos D1 mini開發板, 在側面記得要開孔以求micro USB頭可插入做充電傳輸。
 
-![紙模型](https://github.com/NEXTJun/robotr1/blob/master/src_md/picture/19574974_837766483040011_1601073209781201049_o.jpg?raw=true)
+![紙模型](https://github.com/NEXTJun/ESP8266_Convid19_WebCrawler/blob/master/src_md/picture/90065485_534959493791073_6525902218690822144_o.jpg?raw=true)
 >圖1. 紙模型, 圖片、模型來源 -
 >**Tonn Hsu 許彤**   
->https://www.facebook.com/kuuhakuprojects/
+>https://www.facebook.com/tonnhsu/
 
 ---
 
@@ -56,6 +56,10 @@
 
 這邊先打個預防針, 這類套用模組的專題, 新手照步驟最容易發生的問題在幾點: 線路接錯、劣質杜邦線斷路、買錯模組和模組本身有問題。 建議在操作網路上的別人設計好的懶人專案, 還是需要了解程式內容以及驗證模組電路的可用性。
 
+![電路圖](https://github.com/NEXTJun/ESP8266_Convid19_WebCrawler/blob/master/src_md/picture/wemos_i2c_to_lcd_module_layout.PNG?raw=true)
+>圖2. 電路圖, 圖像來源 -
+>**Fritzing**   
+
 這邊對模組可能要注意的地方提醒幾點:
 
 1. LCD模組I2C接線是否正確, I2C除了電源和接地外, 還存在時脈線(SCL)和數據線(SDA), 模組時脈線對開發板時脈線、模組數據線對開發板數據線, 部分網路說法有開發板spec的數據時脈線應對調, 這和開發板製作有關, 也可作為問題發生的其中一個線路對調測試。
@@ -64,11 +68,10 @@
    
 3. LCD模組I2C地址設定, 本專案程式設定上是0x27, 但這方面設定和模組本身有關, 如模組設定位址有變, 應以模組I2C為主。
    
-4. LCD模組燈光設定, 本專案採用的1602 LCD模組存在旋鈕式可變電阻可調整文字顯示明暗, 如調整錯誤, 將看無文字顯示, 下圖為筆者所調整的旋鈕角度。
+4. LCD模組燈光設定, 本專案採用的1602 LCD模組存在旋鈕式可調電阻可調整文字顯示明暗, 如調整錯誤, 將看無文字顯示, 下圖為筆者所調整的旋鈕角度。
 
-![電路圖](https://github.com/NEXTJun/robotr1/blob/master/src_md/picture/layout.png?raw=true)
->圖2. 電路圖, 圖像來源 -
->**Fritzing**   
+![LCD Hardware Setting](https://github.com/NEXTJun/ESP8266_Convid19_WebCrawler/blob/master/src_md/picture/lcd1602_setting.jpg?raw=true)
+>圖3. 1602 LCD I2C 模組可調電阻設定
 
 ---
 
@@ -76,7 +79,7 @@
 
 ### (1) 環境建置
 
-ESP8266的相關介紹在之前的專案已說明, 此次用的WeMos D1開發板是將ESP8266的ESP-12晶片引出接腳, 並配置通訊、電源模組方便使用者插入USB即可操作編譯, 因體積小且價錢便宜, 在專案中是ESP8266的熱門開發板, 硬要說缺點就引出的接腳數少, 如不在意體積, 需要接腳數多的開發板, 可參考NodeMCU開發板。
+ESP8266的相關介紹在之前的專案已說明, 此次用的WeMos D1 mini開發板是將ESP8266的ESP-12晶片引出接腳, 並配置通訊、電源模組方便使用者插入USB即可操作編譯, 因體積小且價錢便宜, 在專案中是ESP8266的熱門開發板, 硬要說缺點就引出的接腳數少, 如不在意體積, 需要接腳數多的開發板, 可參考NodeMCU開發板。
 
 此專案是採用ESP8266 to Arduino IDE, 將ESP8266當MCU編譯操作, 而預設的AT Command操作。需使用到第三方資源對燒錄的環境建置。
 
@@ -105,7 +108,7 @@ ESP8266的相關介紹在之前的專案已說明, 此次用的WeMos D1開發板
 >#define WIFI_PASSWORD  "12345678"
 >```
 
->更改資料更新的間格時間
+>更改資料更新的間格時間(秒)
 >
 >```C
 >#define GET_HTML_DATA_DELAYTIME  600
@@ -138,8 +141,8 @@ ESP8266的相關介紹在之前的專案已說明, 此次用的WeMos D1開發板
 
 相關細節設定如下圖所示。
 
-![Upload Setting](https://github.com/NEXTJun/robotr1/blob/master/src_md/picture/upload_setting.png?raw=true)
->圖3. 燒錄開發板設定
+![Upload Setting](https://github.com/NEXTJun/ESP8266_Convid19_WebCrawler/blob/master/src_md/picture/upload_setting.jpg?raw=true)
+>圖4. 燒錄開發板設定
 
 ---
 
@@ -154,13 +157,13 @@ ESP8266的相關介紹在之前的專案已說明, 此次用的WeMos D1開發板
 
 3. 因HTTPS網路協定, 連線所需的憑證指紋具有時效性, 需定期更新修改, 透過瀏覽器(Chrome)取得憑證指紋的方法如下圖。
    
-![Get Fingerprint Step 1](https://github.com/NEXTJun/robotr1/blob/master/src_md/picture/IMG_0767.jpg?raw=true)
->圖4. 取得憑證指紋步驟一, 以瀏覽器(Google Chrome)連線進入要取得憑證的https網頁, 點擊網址旁的鎖頭符號(https網頁圖示為鎖頭, https網頁圖示為解鎖頭)-> 點擊憑證
+![Get Fingerprint Step 1](https://github.com/NEXTJun/ESP8266_Convid19_WebCrawler/blob/master/src_md/picture/GetFingerprintStep1.png?raw=true)
+>圖5. 取得憑證指紋步驟一, 以瀏覽器(Google Chrome)連線進入要取得憑證的https網頁, 點擊網址旁的鎖頭符號(https網頁圖示為鎖頭, https網頁圖示為解鎖頭)-> 點擊憑證
 
-![Get Fingerprint Step 2](https://github.com/NEXTJun/robotr1/blob/master/src_md/picture/IMG_0767.jpg?raw=true)
->圖5. 取得憑證指紋步驟二, 點擊跳出視窗的詳細資料-> 選擇憑證指紋-> 複製內容到程式碼內
-   
-1. 因網路的連線架設和品質各地不同, 如出現網路連線異常相關的錯誤, 請自行檢查網路設定。
+![Get Fingerprint Step 2](https://github.com/NEXTJun/ESP8266_Convid19_WebCrawler/blob/master/src_md/picture/GetFingerprintStep2.PNG?raw=true)
+>圖6. 取得憑證指紋步驟二, 點擊跳出視窗的詳細資料-> 選擇憑證指紋-> 複製內容到程式碼內
+  
+4. 因網路的連線架設和品質各地不同, 如出現網路連線異常相關的錯誤, 請自行檢查網路設定。
 
-![Final Project](https://github.com/NEXTJun/robotr1/blob/master/src_md/picture/IMG_0767.jpg?raw=true)
->圖6. 成品
+![Final Project](https://github.com/NEXTJun/robotr1/blob/master/src_md/picture/main.jpg?raw=true)
+>圖7. 成品展示
